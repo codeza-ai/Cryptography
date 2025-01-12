@@ -3,7 +3,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include "sdes.h" // Import SDES implementation
+#include "./sdes.cpp" // Import SDES implementation
 
 using namespace std;
 

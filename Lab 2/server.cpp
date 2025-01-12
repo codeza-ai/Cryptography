@@ -2,7 +2,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include "sdes.h" // Include SDES implementation
+#include "./sdes.cpp" // Include SDES implementation
 
 using namespace std;
 
