@@ -1,9 +1,13 @@
+// sdes.h
+#ifndef SDES_H
+#define SDES_H
+
 #include <iostream>
 #include <vector>
 using namespace std;
  
 class SDES {
-public:
+private:
     // Key for encryption
     vector<int> key = {1, 0, 1, 0, 0, 0, 0, 0, 1, 0}; // example key
     vector<int> P10 = {3, 5, 2, 7, 4, 10, 1, 9, 8, 6};
@@ -71,7 +75,7 @@ public:
         cout << endl;
     }
  
-    // Shift function (circular shift)
+    // Shift function-circular shift
     vector<int> shift(vector<int>& ar, int n) {
         while (n > 0) {
             int temp = ar[0];
@@ -82,24 +86,6 @@ public:
             n--;
         }
         return ar;
-    }
- 
-    // Encryption function
-    vector<int> encryption(vector<int>& plaintext) {
-        vector<int> arr(8);
-        for (int i = 0; i < 8; i++) {
-            arr[i] = plaintext[IP[i] - 1];
-        }
-        vector<int> arr1 = function_(arr, key1);
-        vector<int> after_swap = swap(arr1, arr1.size() / 2);
-        vector<int> arr2 = function_(after_swap, key2);
- 
-        vector<int> ciphertext(8);
-        for (int i = 0; i < 8; i++) {
-            ciphertext[i] = arr2[IP_inv[i] - 1];
-        }
- 
-        return ciphertext;
     }
  
     // Decimal to binary string 0-3
@@ -183,6 +169,24 @@ public:
         }
  
         return output;
+    }
+public:
+    // Encryption function
+    vector<int> encryption(vector<int>& plaintext) {
+        vector<int> arr(8);
+        for (int i = 0; i < 8; i++) {
+            arr[i] = plaintext[IP[i] - 1];
+        }
+        vector<int> arr1 = function_(arr, key1);
+        vector<int> after_swap = swap(arr1, arr1.size() / 2);
+        vector<int> arr2 = function_(after_swap, key2);
+ 
+        vector<int> ciphertext(8);
+        for (int i = 0; i < 8; i++) {
+            ciphertext[i] = arr2[IP_inv[i] - 1];
+        }
+ 
+        return ciphertext;
     }
  
     // Decryption function
