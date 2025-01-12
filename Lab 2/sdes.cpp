@@ -209,26 +209,26 @@ public:
     }
 };
  
-int main() {
-    SDES obj;
-    obj.key_generation(); // Generate keys
+// int main() {
+//     SDES obj;
+//     obj.key_generation(); // Generate keys
  
-    // Input plaintext
-    vector<int> plaintext = {1, 0, 0, 1, 0, 1, 1, 1};
+//     // Input plaintext
+//     vector<int> plaintext = {1, 0, 0, 1, 0, 1, 1, 1};
  
-    cout << "\nYour Plain Text is: ";
-    for (int i = 0; i < 8; i++) cout << plaintext[i] << " ";
-    cout << endl;
+//     cout << "\nYour Plain Text is: ";
+//     for (int i = 0; i < 8; i++) cout << plaintext[i] << " ";
+//     cout << endl;
  
-    vector<int> ciphertext = obj.encryption(plaintext);
-    cout << "\nYour Cipher Text is: ";
-    for (int i = 0; i < 8; i++) cout << ciphertext[i] << " ";
-    cout << endl;
+//     vector<int> ciphertext = obj.encryption(plaintext);
+//     cout << "\nYour Cipher Text is: ";
+//     for (int i = 0; i < 8; i++) cout << ciphertext[i] << " ";
+//     cout << endl;
  
-    vector<int> decrypted = obj.decryption(ciphertext);
-    cout << "\nYour Decrypted Text is: ";
-    for (int i = 0; i < 8; i++) cout << decrypted[i] << " ";
-    cout << endl;
+//     vector<int> decrypted = obj.decryption(ciphertext);
+//     cout << "\nYour Decrypted Text is: ";
+//     for (int i = 0; i < 8; i++) cout << decrypted[i] << " ";
+//     cout << endl;
  
-    return 0;
-}
+//     return 0;
+// }

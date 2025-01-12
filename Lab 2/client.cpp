@@ -3,6 +3,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include "sdes.h" // Import SDES implementation
 
 using namespace std;
 
@@ -38,16 +39,36 @@ int main() {
 
     cout << "Connected to server at " << SERVER_IP << " on port " << PORT << "\n";
 
+    // Create SDES object for encryption
+    SDES sdes_obj;
+    sdes_obj.key_generation(); // Generate keys for encryption
+
     // Communication with server
     while (true) {
-        cout << "Enter message to send to server (or type 'exit' to quit): ";
+        cout << "Enter an 8-bit binary string to send (or type 'exit' to quit): ";
         cin.getline(buffer, BUFFER_SIZE);
 
         if (strcmp(buffer, "exit") == 0) {
             break;
         }
 
-        send(sockfd, buffer, strlen(buffer), 0);
+        // Convert input to vector<int>
+        vector<int> plaintext(8);
+        for (int i = 0; i < 8; i++) {
+            plaintext[i] = buffer[i] - '0';
+        }
+
+        // Encrypt the plaintext
+        vector<int> ciphertext = sdes_obj.encryption(plaintext);
+
+        // Convert ciphertext vector to string
+        string encrypted_message;
+        for (int bit : ciphertext) {
+            encrypted_message += (bit + '0');
+        }
+
+        // Send encrypted message to server
+        send(sockfd, encrypted_message.c_str(), encrypted_message.size(), 0);
 
         // Receiving response from server
         int bytes_received = recv(sockfd, buffer, BUFFER_SIZE, 0);

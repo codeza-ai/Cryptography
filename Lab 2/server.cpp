@@ -2,6 +2,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include "sdes.h" // Include SDES implementation
 
 using namespace std;
 
@@ -50,6 +51,10 @@ int main() {
 
     cout << "Client connected: " << inet_ntoa(client_addr.sin_addr) << "\n";
 
+    // Create SDES object for decryption
+    SDES sdes_obj;
+    sdes_obj.key_generation(); // Generate keys for encryption/decryption
+
     // Communication with client
     while (true) {
         memset(buffer, 0, BUFFER_SIZE);
@@ -62,10 +67,31 @@ int main() {
             break;
         }
 
-        cout << "Client: " << buffer << "\n";
+        // Print encrypted message received
+        buffer[bytes_read] = '\0';
+        string encrypted_message(buffer);
+        cout << "Encrypted message received: " << encrypted_message << "\n";
+
+        // Convert encrypted message to vector<int>
+        vector<int> ciphertext;
+        for (char c : encrypted_message) {
+            ciphertext.push_back(c - '0');
+        }
+
+        // Decrypt the message
+        vector<int> decrypted_message = sdes_obj.decryption(ciphertext);
+
+        // Convert decrypted message to string
+        string plaintext_message;
+        for (int bit : decrypted_message) {
+            plaintext_message += (bit + '0');
+        }
+
+        // Print the decrypted message
+        cout << "Decrypted message: " << plaintext_message << "\n";
 
         // Sending response to client
-        string message = "Message received";
+        string message = "Message received and decrypted";
         send(client_fd, message.c_str(), message.size(), 0);
     }
 
