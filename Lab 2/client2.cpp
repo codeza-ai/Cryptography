@@ -3,7 +3,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include "SDES.h" // Import SDES implementation
+// #include "./sdes.cpp" // Import SDES implementation
 
 using namespace std;
 
@@ -38,10 +38,6 @@ int main() {
     }
 
     cout << "Connected to server at " << SERVER_IP << " on port " << PORT << "\n";
-
-    // Create SDES object for encryption
-    SDES sdes_obj;
-    sdes_obj.key_generation(); // Generate keys for encryption
 
     // Communication with server
     while (true) {
