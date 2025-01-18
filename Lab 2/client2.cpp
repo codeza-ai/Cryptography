@@ -1,82 +1,71 @@
-#include <iostream>
-#include <vector>
 #include <cstring>
+#include <iostream>
+#include <bits/stdc++.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include <unistd.h>
-#include <arpa/inet.h>
-// #include "./sdes.cpp" // Import SDES implementation
-
 using namespace std;
 
-#define SERVER_IP "127.0.0.1"
-#define PORT 8080
-#define BUFFER_SIZE 1024
+int clientSocket;
+
+
+void clientConnect()
+{
+    clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+
+    sockaddr_in serverAddress;
+    serverAddress.sin_family = AF_INET;
+    serverAddress.sin_port = htons(8080);
+    serverAddress.sin_addr.s_addr = INADDR_ANY;
+
+    connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
+}
+
+void sendData(string message) {
+    char buffer[100] = { 0 };
+    copy(message.begin(), message.end(), buffer);
+    send(clientSocket, buffer, sizeof(buffer), 0);
+}
+
+string receiveData(){
+    char buffer[100] = { 0 };
+    recv(clientSocket, buffer, sizeof(buffer), 0);
+    string message = string(buffer);
+    return message;
+}
 
 int main() {
-    int sockfd;
-    struct sockaddr_in server_addr;
-    char buffer[BUFFER_SIZE];
+    clientConnect();
 
-    // Creating socket
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("Socket failed");
-        exit(EXIT_FAILURE);
-    }
+    cout << ">: " << receiveData() << endl;
+    sendData("Client Online!");
 
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(PORT);
+    string plainText;
+    cout << ">: Enter the 8 letter message to encrypt: ";
+    getline(cin, plainText);
+    plainText=atobConv(plainText);
+    cout<<"Plaintext: "<<BinToHex(plainText)<<endl;
 
-    // Converting IP address from text to binary form
-    if (inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr) <= 0) {
-        perror("Invalid address");
-        exit(EXIT_FAILURE);
-    }
+    string key;
+    cout << ">: Enter the 8 letter key: ";
+    cin >> key;
+    key=atobConv(key);
+    cout<<"Key: "<<BinToHex(key)<<endl;
+    
+    vector<string> sixteenKeys = generateKeys(key);
 
-    // Connecting to the server
-    if (connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Connection failed");
-        exit(EXIT_FAILURE);
-    }
+    string cipherText = DES_Encryption(plainText, initialPermutation, sixteenKeys, expnasionPermutation, permutationFunction, substitutionBoxes, IPInverse);
+    
+    cipherText = BinToHex(cipherText);
+    sendData(cipherText);
+    cout << ">: Encrypted message sent to Server!!" << endl;
 
-    cout << "Connected to server at " << SERVER_IP << " on port " << PORT << "\n";
+    key = BinToHex(key);
+    sendData(key);
+    cout << ">: 64-Bit Key sent to Server!" << endl;
 
-    // Communication with server
-    while (true) {
-        cout << "Enter an 8-bit binary string to send (or type 'exit' to quit): ";
-        cin.getline(buffer, BUFFER_SIZE);
+    cout << ">: Client Exiting!!!" << endl << endl;
+    close(clientSocket);
 
-        if (strcmp(buffer, "exit") == 0) {
-            break;
-        }
-
-        // Convert input to vector<int>
-        vector<int> plaintext(8);
-        for (int i = 0; i < 8; i++) {
-            plaintext[i] = buffer[i] - '0';
-        }
-
-        // Encrypt the plaintext
-        vector<int> ciphertext = sdes_obj.encryption(plaintext);
-
-        // Convert ciphertext vector to string
-        string encrypted_message;
-        for (int bit : ciphertext) {
-            encrypted_message += (bit + '0');
-        }
-
-        // Send encrypted message to server
-        send(sockfd, encrypted_message.c_str(), encrypted_message.size(), 0);
-
-        // Receiving response from server
-        int bytes_received = recv(sockfd, buffer, BUFFER_SIZE, 0);
-        if (bytes_received <= 0) {
-            cout << "Server closed connection or error occurred\n";
-            break;
-        }
-
-        buffer[bytes_received] = '\0';
-        cout << "Server: " << buffer << "\n";
-    }
-
-    close(sockfd);
     return 0;
 }
