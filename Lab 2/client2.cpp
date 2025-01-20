@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include "DES.h"
 using namespace std;
 
 int clientSocket;
@@ -36,6 +37,7 @@ string receiveData(){
 
 int main() {
     clientConnect();
+    DES obj;
 
     cout << ">: " << receiveData() << endl;
     sendData("Client Online!");
@@ -43,24 +45,24 @@ int main() {
     string plainText;
     cout << ">: Enter the 8 letter message to encrypt: ";
     getline(cin, plainText);
-    plainText=atobConv(plainText);
-    cout<<"Plaintext: "<<BinToHex(plainText)<<endl;
+    plainText=obj.atobConv(plainText);
+    cout<<"Plaintext: "<<obj.BinToHex(plainText)<<endl;
 
     string key;
     cout << ">: Enter the 8 letter key: ";
     cin >> key;
     key=atobConv(key);
-    cout<<"Key: "<<BinToHex(key)<<endl;
+    cout<<"Key: "<<obj.BinToHex(key)<<endl;
     
-    vector<string> sixteenKeys = generateKeys(key);
+    vector<string> sixteenKeys = obj.generateKeys(key);
 
-    string cipherText = DES_Encryption(plainText, initialPermutation, sixteenKeys, expnasionPermutation, permutationFunction, substitutionBoxes, IPInverse);
+    string cipherText = obj.DES_Encryption(plainText, initialPermutation, sixteenKeys, expnasionPermutation, permutationFunction, substitutionBoxes, IPInverse);
     
-    cipherText = BinToHex(cipherText);
+    cipherText = obj.BinToHex(cipherText);
     sendData(cipherText);
     cout << ">: Encrypted message sent to Server!!" << endl;
 
-    key = BinToHex(key);
+    key = obj.BinToHex(key);
     sendData(key);
     cout << ">: 64-Bit Key sent to Server!" << endl;
 
