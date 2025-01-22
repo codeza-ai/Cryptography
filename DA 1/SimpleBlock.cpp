@@ -1,161 +1,145 @@
 #include <iostream>
 #include <vector>
-#include <algorithm>
-#include <iomanip>
+#include <string>
+#include <bitset>
 
 using namespace std;
 
-class SimpleIDEABlockCipher
+class SimpleBlockCipher
 {
-public:
-    static constexpr size_t BLOCK_SIZE_WORDS = 4;
-    static constexpr size_t KEY_SIZE_WORDS = 8;
-
-    SimpleIDEABlockCipher(const vector<uint16_t> &key)
-    {
-        if (key.size() != KEY_SIZE_WORDS)
-        {
-            throw invalid_argument("Invalid key size");
-        }
-        this->roundKeys = generateRoundKeys(key);
-    }
-
-    vector<uint16_t> encrypt(const vector<uint16_t> &plaintext)
-    {
-        if (plaintext.size() != BLOCK_SIZE_WORDS)
-        {
-            throw invalid_argument("Invalid plaintext size");
-        }
-
-        vector<uint16_t> state = plaintext;
-
-        for (size_t round = 0; round < 3; ++round)
-        {
-            state[0] = mul(state[0], roundKeys[4 * round]);
-            state[1] = add(state[1], roundKeys[4 * round + 1]);
-            state[2] = add(state[2], roundKeys[4 * round + 2]);
-            state[3] = mul(state[3], roundKeys[4 * round + 3]);
-
-            state[0] = add(state[0], state[2]);
-            state[1] = mul(state[1], state[3]);
-
-            state[2] = add(state[0], state[2]);
-            state[3] = mul(state[1], state[3]);
-
-            rotate(state.begin(), state.begin() + 1, state.end());
-        }
-
-        state[0] = mul(state[0], roundKeys[12]);
-        state[1] = add(state[1], roundKeys[13]);
-        state[2] = add(state[2], roundKeys[14]);
-        state[3] = mul(state[3], roundKeys[15]);
-
-        return state;
-    }
-
-    vector<uint16_t> decrypt(const vector<uint16_t> &ciphertext)
-    {
-        if (ciphertext.size() != BLOCK_SIZE_WORDS)
-        {
-            throw invalid_argument("Invalid ciphertext size");
-        }
-
-        vector<uint16_t> state = ciphertext;
-
-        state[3] = mul_inv(state[3], roundKeys[15]);
-        state[2] = sub(state[2], roundKeys[14]);
-        state[1] = sub(state[1], roundKeys[13]);
-        state[0] = mul_inv(state[0], roundKeys[12]);
-
-        for (int round = 2; round >= 0; --round)
-        {
-            rotate(state.rbegin(), state.rbegin() + 1, state.rend());
-
-            state[3] = mul_inv(state[3], state[1]);
-            state[2] = sub(state[2], state[0]);
-            state[1] = mul_inv(state[1], state[3]);
-            state[0] = sub(state[0], state[2]);
-
-            state[3] = mul_inv(state[3], roundKeys[4 * round + 3]);
-            state[2] = sub(state[2], roundKeys[4 * round + 2]);
-            state[1] = sub(state[1], roundKeys[4 * round + 1]);
-            state[0] = mul(state[0], roundKeys[4 * round]);
-        }
-
-        return state;
-    }
-
 private:
-    vector<uint16_t> roundKeys;
+    string masterKey;
+    vector<string> keys;
 
-    uint16_t add(uint16_t a, uint16_t b)
+    // XOR two binary strings
+    string xorKeys(const string &key1, const string &key2)
     {
-        return a + b;
-    }
-
-    uint16_t sub(uint16_t a, uint16_t b)
-    {
-        return a - b;
-    }
-
-    uint16_t mul(uint16_t a, uint16_t b)
-    {
-        return (uint16_t)(static_cast<int32_t>(a) * static_cast<int32_t>(b)) & 0xFFFF;
-    }
-
-    uint16_t mul_inv(uint16_t a, uint16_t m)
-    {
-        if (a == 0)
+        string newKey = "";
+        for (int i = 0; i < 8; i++)
         {
-            return 0;
+            newKey += (key1[i] == key2[i]) ? "0" : "1";
         }
-        for (uint16_t i = 1; i < 0xFFFF; ++i)
+        return newKey;
+    }
+
+    // Add two binary strings
+    string addKeys(const string &key1, const string &key2)
+    {
+        string newKey = "";
+        bool carry = false;
+        for (int i = 7; i >= 0; i--)
         {
-            if ((mul(a, i) & 0xFFFF) == 1)
+            bool bit1 = (key1[i] == '1');
+            bool bit2 = (key2[i] == '1');
+            bool sum = bit1 ^ bit2 ^ carry;
+            carry = (bit1 && bit2) || (carry && (bit1 ^ bit2));
+            newKey = (sum ? "1" : "0") + newKey;
+        }
+        return newKey;
+    }
+
+    // Generate round keys
+    void generateKeys()
+    {
+        string xorKey = masterKey.substr(0, 8);
+        string addKey = masterKey.substr(8, 8);
+
+        keys.clear();
+        for (int i = 0; i < 8; i++)
+        {
+            string temp = bitset<8>(i).to_string(); // Use iteration number as input
+            string newKey = xorKeys(temp, xorKey);
+            newKey = addKeys(newKey, addKey);
+            keys.push_back(newKey);
+        }
+    }
+
+public:
+    SimpleBlockCipher(string key)
+    {
+        if (key.length() != 16)
+        {
+            throw invalid_argument("Key must be exactly 16 bits long.");
+        }
+        masterKey = key;
+        generateKeys();
+    }
+
+    // Encrypt plaintext
+    string encrypt(string plaintext)
+    {
+        string ciphertext = "";
+        int j = 0;
+        for (size_t i = 0; i < plaintext.length(); i += 8)
+        {
+            string block = plaintext.substr(i, 8);
+            if (block.length() < 8)
             {
-                return i;
+                block.append(8 - block.length(), '0'); // Pad with zeros if needed
             }
+            block = xorKeys(block, keys[j % keys.size()]);
+            ciphertext += block;
+            j++;
         }
-        return 0;
+        return ciphertext;
     }
 
-    vector<uint16_t> generateRoundKeys(const vector<uint16_t> &key)
+    // Decrypt ciphertext
+    string decrypt(string ciphertext)
     {
-        vector<uint16_t> roundKeys(KEY_SIZE_WORDS * 4);
-        for (size_t i = 0; i < KEY_SIZE_WORDS; ++i)
+        string decrypted = "";
+        int j = 0;
+        for (size_t i = 0; i < ciphertext.length(); i += 8)
         {
-            roundKeys[i] = key[i];
+            string block = ciphertext.substr(i, 8);
+            block = xorKeys(block, keys[j % keys.size()]);
+            decrypted += block;
+            j++;
         }
-        for (size_t i = KEY_SIZE_WORDS; i < KEY_SIZE_WORDS * 4; ++i)
-        {
-            roundKeys[i] = roundKeys[i - KEY_SIZE_WORDS];
-        }
-        return roundKeys;
+        return decrypted;
     }
 };
 
 int main()
 {
-    vector<uint16_t> key = {0x1234, 0x5678, 0x9ABC, 0xDEF0, 0x0123, 0x4567, 0x89AB, 0xCDEF};
-    SimpleIDEABlockCipher cipher(key);
+    string key;
+    cout << "Enter the key (16 bits long): ";
+    cin >> key;
 
-    vector<uint16_t> plaintext = {0x1111, 0x2222, 0x3333, 0x4444};
-
-    vector<uint16_t> ciphertext = cipher.encrypt(plaintext);
-    cout << "Ciphertext: ";
-    for (uint16_t word : ciphertext)
+    try
     {
-        cout << hex << setw(4) << setfill('0') << word << " ";
-    }
-    cout << endl;
+        SimpleBlockCipher cipher(key);
 
-    vector<uint16_t> decrypted = cipher.decrypt(ciphertext);
-    cout << "Decrypted: ";
-    for (uint16_t word : decrypted)
-    {
-        cout << hex << setw(4) << setfill('0') << word << " ";
+        string plaintext;
+        cout << "Enter the plaintext (6 characters): ";
+        cin >> plaintext;
+
+        // Convert plaintext to binary (48 bits)
+        string binaryPlaintext = "";
+        for (char c : plaintext)
+        {
+            binaryPlaintext += bitset<8>(c).to_string();
+        }
+
+        string ciphertext = cipher.encrypt(binaryPlaintext);
+        cout << "Ciphertext: " << ciphertext << endl;
+
+        string decryptedBinary = cipher.decrypt(ciphertext);
+
+        // Convert decrypted binary back to text
+        string decryptedText = "";
+        for (size_t i = 0; i < decryptedBinary.length(); i += 8)
+        {
+            bitset<8> charBits(decryptedBinary.substr(i, 8));
+            decryptedText += static_cast<char>(charBits.to_ulong());
+        }
+
+        cout << "Decrypted: " << decryptedText << endl;
     }
-    cout << endl;
+    catch (const exception &e)
+    {
+        cerr << "Error: " << e.what() << endl;
+    }
 
     return 0;
 }
