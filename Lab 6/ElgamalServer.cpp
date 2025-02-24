@@ -13,7 +13,7 @@
 
 using namespace std;
 
-#define PRIME_P 23
+#define PRIME_P 97
 
 int clientSocket, serverSocket;
 
