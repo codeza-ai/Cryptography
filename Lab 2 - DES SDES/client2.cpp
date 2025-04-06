@@ -53,8 +53,8 @@ int main() {
     cin >> key;
     key=atobConv(key);
     cout<<"Key: "<<obj.BinToHex(key)<<endl;
-    
-    vector<string> sixteenKeys = obj.generateKeys(key);
+    vector<int> rounds = {2, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2}
+    vector<string> sixteenKeys = obj.generateKeys(rounds, key);
 
     string cipherText = obj.DES_Encryption(plainText, initialPermutation, sixteenKeys, expnasionPermutation, permutationFunction, substitutionBoxes, IPInverse);
     

@@ -6,6 +6,7 @@
 #include <array>
 #include <iomanip>
 #include <stdexcept>
+#include <stdint.h>
 
 using namespace std;
 class AES {

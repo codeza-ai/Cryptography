@@ -36,7 +36,7 @@ string DES::shiftKey(string& key, int& shiftTimes) {
     return result;
 }
 
-vector<string> DES::generateKeys(string& key) {
+vector<string> DES::generateKeys(vector<int>& rounds,string& key) {
     string keyAfterIP = arrangePermutation(key, IP);
 
     string leftPartOfKey = keyAfterIP.substr(0, 32);
@@ -166,6 +166,7 @@ string DES::DES_Encryption(string& plainText, vector<int>& IP, vector<string>& s
         XORedResult = XOR(leftPartOfText, tempResultAfterPF);
         leftPartOfText = XORedResult;
         if(i < 15) {
+            // Not swapping in the final round
             swap(leftPartOfText, rightPartOfText);
         }
     }
