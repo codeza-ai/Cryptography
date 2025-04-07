@@ -27,6 +27,7 @@ def decrypt(ciphertext, private_key, p):
     a, b = ciphertext
     s = power(a, private_key, p)
     plain = (b * power(s, p - 2, p)) % p  # b / s mod p
+    # power(s, p - 2, p) is the inverse of s
     return chr(plain)
 
 # Server setup

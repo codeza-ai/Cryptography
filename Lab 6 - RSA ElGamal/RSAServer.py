@@ -55,6 +55,7 @@ print(f"Private key: {private}")
 conn.send(f"{public[0]},{public[1]}".encode())
 
 data = conn.recv(4096).decode()
+print(data)
 cipher = list(map(int, data.split(',')))
 
 plain_text = decrypt(cipher, private)

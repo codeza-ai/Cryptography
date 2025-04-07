@@ -12,6 +12,7 @@ def power(a, b, c):
     return result
 
 def encrypt(m, public_key):
+    # P is the prime number, 
     p, g, y = public_key
     k = random.randint(2, p - 2)
     a = power(g, k, p)

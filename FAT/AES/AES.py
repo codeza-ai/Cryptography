@@ -18,7 +18,6 @@ def encrypt(plain_text, key):
     cipher = AES.new(key, AES.MODE_CBC, iv)
     padded_text = pad(plain_text.encode(), AES.block_size)
     encrypted_bytes = cipher.encrypt(padded_text)
-    # Prepend IV to ciphertext and encode
     return base64.b64encode(iv + encrypted_bytes).decode()
 
 def decrypt(cipher_text, key):
